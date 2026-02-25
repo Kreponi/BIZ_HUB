@@ -1,135 +1,155 @@
-# Deployment Guide (Step by Step)
+# Deployment Guide: PythonAnywhere + Netlify
 
-This project has two deployable parts:
-- `frontend` (Vite static app)
-- `backend` (Django API)
-
-## 0. Recommended Hosting Split (Netlify + Render)
-
-- Host `frontend` on Netlify.
-- Host `backend` on Render web service with Render PostgreSQL.
-- Set frontend env var on Netlify:
-  - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api`
-- Set backend env vars on Render:
-  - `DJANGO_ALLOWED_HOSTS=<your-render-service>.onrender.com`
-  - `CORS_ALLOWED_ORIGINS=https://<your-netlify-site>.netlify.app`
-  - `CSRF_TRUSTED_ORIGINS=https://<your-netlify-site>.netlify.app`
+This project is deployed as:
+- `backend` (Django API) on PythonAnywhere
+- `frontend` (Vite app) on Netlify
 
 ## 1. Prerequisites
 
-1. Install Node.js 20+ and Python 3.12+.
-2. Provision a PostgreSQL database.
-3. Decide your domains:
-   - Frontend: `https://app.example.com`
-   - Backend API: `https://api.example.com`
+1. Push your project to GitHub.
+2. Create accounts on:
+   - PythonAnywhere
+   - Netlify
+3. Have a PostgreSQL database URL ready (`DATABASE_URL`).
 
-## 2. Backend Environment Setup
+## 2. Backend Deploy (PythonAnywhere)
 
-1. Copy `backend/.env.example` to your deploy platform env vars.
-2. Set required values:
-   - `DJANGO_SECRET_KEY`
-   - `DJANGO_DEBUG=False`
-   - `DJANGO_ALLOWED_HOSTS=api.example.com`
-   - `CORS_ALLOWED_ORIGINS=https://app.example.com`
-   - `CSRF_TRUSTED_ORIGINS=https://app.example.com`
-   - `DATABASE_URL=postgresql://...`
+### 2.1 Create the web app
 
-## 3. Backend Build and Start
+1. In PythonAnywhere, open **Web** and click **Add a new web app**.
+2. Choose your domain (for example: `yourname.pythonanywhere.com`).
+3. Select **Manual configuration**.
+4. Choose Python 3.12 (or closest available).
 
-Run from repo root:
+### 2.2 Clone and install backend
 
-```powershell
-python -m venv backend/.venv
-backend/.venv/Scripts/python -m pip install -r backend/requirements.txt
-backend/.venv/Scripts/python backend/manage.py migrate
-backend/.venv/Scripts/python backend/manage.py collectstatic --noinput
-backend/.venv/Scripts/python backend/manage.py check --deploy
-backend/.venv/Scripts/python backend/manage.py createsuperuser
+Open a PythonAnywhere **Bash** console and run:
+
+```bash
+cd ~
+git clone <your-github-repo-url> BIZ_HUB
+cd BIZ_HUB/backend
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-Production start command (from `backend` directory):
+### 2.3 Set environment variables
 
-```powershell
-gunicorn config.wsgi:application --bind 0.0.0.0:8000
+In **Web -> your app -> Environment variables**, add:
+
+```text
+DJANGO_SECRET_KEY=<strong-random-secret>
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=yourname.pythonanywhere.com
+CORS_ALLOWED_ORIGINS=https://<your-netlify-site>.netlify.app
+CSRF_TRUSTED_ORIGINS=https://<your-netlify-site>.netlify.app
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+DB_SSL_REQUIRE=True
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+SECURE_HSTS_SECONDS=31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+SECURE_HSTS_PRELOAD=True
 ```
 
-Health check endpoint:
-- `GET /healthz/` returns `{"status":"ok"}`
+### 2.4 Run Django setup commands
 
-## 4. Frontend Environment Setup
+In Bash:
 
-1. Copy `frontend/.env.example` values into frontend deployment env vars.
-2. Set:
-   - `VITE_API_BASE_URL=https://api.example.com/api`
-
-## 5. Frontend Build and Deploy
-
-Run from repo root:
-
-```powershell
-cd frontend
-npm ci
-npm run build
+```bash
+cd ~/BIZ_HUB/backend
+source .venv/bin/activate
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py check --deploy
 ```
 
-Deploy the generated `frontend/dist` folder to your static host (Netlify, Cloudflare Pages, S3+CloudFront, etc.).
+Optional admin user:
 
-For Netlify in this repo:
-- Netlify will read `netlify.toml` from the repo root.
-- Build base: `frontend`
-- Build command: `npm ci && npm run build`
-- Publish directory: `dist`
-- SPA routing rewrite to `index.html` is already configured in `netlify.toml`.
-
-## 6. Post-Deploy Verification
-
-1. Backend:
-   - Open `https://api.example.com/healthz/`
-   - Open `https://api.example.com/api/categories/`
-2. Frontend:
-   - Load home page.
-   - Open a product detail page.
-   - Confirm API requests go to `https://api.example.com/api`.
-3. Admin:
-   - Log in through app admin UI.
-   - Create/update a category and product.
-
-## 7. DNS + TLS Checklist
-
-1. Add DNS records for both frontend and backend domains.
-2. Enable HTTPS certificates on both.
-3. Confirm browser has no mixed-content warnings.
-
-## 8. Docker Deployment Option
-
-Use this if you prefer containerized deployment.
-
-1. Create `backend/.env` from `backend/.env.example`.
-2. Build and run:
-
-```powershell
-docker compose up --build -d
+```bash
+python manage.py createsuperuser
 ```
 
-3. Validate:
-   - Frontend: `http://localhost:8080`
-   - Backend: `http://localhost:8000/healthz/`
+### 2.5 Configure WSGI
 
-## 9. Full Local Deployment Scan (No External DB Needed)
+In **Web -> WSGI configuration file**, ensure:
+- project path includes `~/BIZ_HUB/backend`
+- virtualenv points to `~/BIZ_HUB/backend/.venv`
+- WSGI app loads `config.wsgi`
 
-This runs frontend + backend + PostgreSQL together for a production-like local test.
+Typical content:
 
-```powershell
-docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
+```python
+import os
+import sys
+
+path = '/home/<your-pythonanywhere-username>/BIZ_HUB/backend'
+if path not in sys.path:
+    sys.path.append(path)
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
 ```
 
-Verify:
-- Frontend: `http://localhost:8080`
-- Backend health: `http://localhost:8000/healthz/`
-- API list: `http://localhost:8000/api/categories/`
+### 2.6 Configure static files
 
-Shutdown:
+In **Web -> Static files**, add:
+- URL: `/static/`
+- Directory: `/home/<your-pythonanywhere-username>/BIZ_HUB/backend/staticfiles`
 
-```powershell
-docker compose -f docker-compose.yml -f docker-compose.local.yml down -v
+### 2.7 Reload and test backend
+
+1. Click **Reload** in PythonAnywhere Web tab.
+2. Test:
+   - `https://yourname.pythonanywhere.com/healthz/`
+   - `https://yourname.pythonanywhere.com/api/categories/`
+
+## 3. Frontend Deploy (Netlify)
+
+### 3.1 Create Netlify site
+
+1. In Netlify, click **Add new site -> Import an existing project**.
+2. Connect GitHub and select this repository.
+3. Netlify should read `netlify.toml` automatically:
+   - Base: `frontend`
+   - Build: `npm ci && npm run build`
+   - Publish: `dist`
+
+### 3.2 Set frontend environment variable
+
+In Netlify site settings, set:
+
+```text
+VITE_API_BASE_URL=https://yourname.pythonanywhere.com/api
 ```
+
+### 3.3 Deploy
+
+1. Trigger deploy.
+2. After success, copy Netlify URL:
+   - `https://<your-site>.netlify.app`
+
+## 4. Final Cross-Origin Update
+
+After Netlify URL is known, return to PythonAnywhere environment variables and set:
+
+```text
+CORS_ALLOWED_ORIGINS=https://<your-site>.netlify.app
+CSRF_TRUSTED_ORIGINS=https://<your-site>.netlify.app
+```
+
+Then click **Reload** on PythonAnywhere again.
+
+## 5. Final Verification Checklist
+
+1. Open frontend URL on Netlify.
+2. Confirm product/category data loads.
+3. Confirm API requests go to PythonAnywhere domain.
+4. Confirm no CORS errors in browser console.
+5. Confirm health check works:
+   - `https://yourname.pythonanywhere.com/healthz/`

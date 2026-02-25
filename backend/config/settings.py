@@ -22,12 +22,12 @@ def env_list(name: str, default: str = "") -> list[str]:
 
 
 # SECURITY WARNING: keep the secret key used in production secret.
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-only-key")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "wF+7CqTIosOvq3cYDjPIheLgdhWc6KZtzlskHjh9BhQ=")
 
 # SECURITY WARNING: don't run with debug turned on in production.
-DEBUG = env_bool("DJANGO_DEBUG", True)
+DEBUG = env_bool("DJANGO_DEBUG", False)
 
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost")
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 render_external_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME")
 if render_external_hostname and render_external_hostname not in ALLOWED_HOSTS:
     # Render injects this hostname at runtime for public web services.
@@ -157,7 +157,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,https://bizhubb.vercel.app,https://bizhubb.netlify.app",
+    "http://localhost:5173",
 )
 CSRF_TRUSTED_ORIGINS = env_list(
     "CSRF_TRUSTED_ORIGINS",

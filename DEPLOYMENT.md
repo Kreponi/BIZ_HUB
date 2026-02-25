@@ -4,16 +4,16 @@ This project has two deployable parts:
 - `frontend` (Vite static app)
 - `backend` (Django API)
 
-## 0. Recommended Hosting Split (Vercel + Render)
+## 0. Recommended Hosting Split (Netlify + Render)
 
-- Host `frontend` on Vercel.
+- Host `frontend` on Netlify.
 - Host `backend` on Render web service with Render PostgreSQL.
-- Set frontend env var on Vercel:
+- Set frontend env var on Netlify:
   - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api`
 - Set backend env vars on Render:
   - `DJANGO_ALLOWED_HOSTS=<your-render-service>.onrender.com`
-  - `CORS_ALLOWED_ORIGINS=https://<your-vercel-project>.vercel.app`
-  - `CSRF_TRUSTED_ORIGINS=https://<your-vercel-project>.vercel.app`
+  - `CORS_ALLOWED_ORIGINS=https://<your-netlify-site>.netlify.app`
+  - `CSRF_TRUSTED_ORIGINS=https://<your-netlify-site>.netlify.app`
 
 ## 1. Prerequisites
 
@@ -72,13 +72,14 @@ npm ci
 npm run build
 ```
 
-Deploy the generated `frontend/dist` folder to your static host (Netlify, Vercel static output, Cloudflare Pages, S3+CloudFront, etc.).
+Deploy the generated `frontend/dist` folder to your static host (Netlify, Cloudflare Pages, S3+CloudFront, etc.).
 
-For Vercel in this repo:
-- Root directory: `frontend`
+For Netlify in this repo:
+- Netlify will read `netlify.toml` from the repo root.
+- Build base: `frontend`
 - Build command: `npm ci && npm run build`
-- Output directory: `dist`
-- `frontend/vercel.json` already includes SPA rewrites to `index.html`.
+- Publish directory: `dist`
+- SPA routing rewrite to `index.html` is already configured in `netlify.toml`.
 
 ## 6. Post-Deploy Verification
 

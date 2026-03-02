@@ -19,6 +19,8 @@ services:
         value: https://your-netlify-site.netlify.app
       - key: CSRF_TRUSTED_ORIGINS
         value: https://your-netlify-site.netlify.app
+      - key: FRONTEND_BASE_URL
+        value: https://your-netlify-site.netlify.app
       - key: DATABASE_URL
         sync: false
       - key: DB_SSL_REQUIRE

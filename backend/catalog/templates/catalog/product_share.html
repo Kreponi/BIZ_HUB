@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ og_title }}</title>
+  <meta name="description" content="{{ og_description }}">
+  <meta property="og:type" content="product">
+  <meta property="og:site_name" content="BIZ HUB">
+  <meta property="og:title" content="{{ og_title }}">
+  <meta property="og:description" content="{{ og_description }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:url" content="{{ og_url }}">
+  <meta property="product:price:amount" content="{{ product.price }}">
+  <meta property="product:price:currency" content="GHS">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ og_title }}">
+  <meta name="twitter:description" content="{{ og_description }}">
+  <meta name="twitter:image" content="{{ og_image }}">
+  <meta http-equiv="refresh" content="0;url={{ product_url }}">
+</head>
+<body>
+  <p>Redirecting to <a href="{{ product_url }}">{{ product.name }}</a>...</p>
+  <script>
+    window.location.replace("{{ product_url|escapejs }}");
+  </script>
+</body>
+</html>

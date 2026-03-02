@@ -1,7 +1,11 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Count
 from django.db.models import ProtectedError
 from django.db.models import Q
+from django.shortcuts import get_object_or_404, render
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -10,6 +14,32 @@ from rest_framework.views import APIView
 
 from .models import AnalyticsEvent, Category, Product
 from .serializers import AnalyticsEventSerializer, CategorySerializer, ProductSerializer
+
+
+def product_share_page(request, product_id: int):
+    product = get_object_or_404(Product, pk=product_id)
+    frontend_base_url = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
+    product_url = f"{frontend_base_url}/product/{product.id}"
+    og_image = ""
+    if isinstance(product.images, list) and product.images:
+        first_image = product.images[0]
+        if isinstance(first_image, str) and first_image.startswith(("http://", "https://")):
+            og_image = first_image
+    if not og_image:
+        og_image = f"{frontend_base_url}/bizhub_logo.jpeg"
+
+    context = {
+        "product": product,
+        "product_url": product_url,
+        "og_url": request.build_absolute_uri(),
+        "og_title": f"{product.name} | BIZ HUB",
+        "og_description": (
+            f"{product.description[:180]}..." if len(product.description) > 180 else product.description
+        ),
+        "og_image": og_image,
+        "og_price": f"GH₵{Decimal(product.price):,.2f}",
+    }
+    return render(request, "catalog/product_share.html", context)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

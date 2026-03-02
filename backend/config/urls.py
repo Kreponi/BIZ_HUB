@@ -17,9 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
+from catalog.views import product_share_page
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('catalog.urls')),
+    path("share/product/<int:product_id>/", product_share_page, name="share-product"),
     path('healthz/', lambda request: JsonResponse({"status": "ok"})),
 ]

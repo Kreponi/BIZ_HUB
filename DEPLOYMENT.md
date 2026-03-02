@@ -44,6 +44,7 @@ DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=<your-render-service>.onrender.com
 CORS_ALLOWED_ORIGINS=https://<your-netlify-site>.netlify.app
 CSRF_TRUSTED_ORIGINS=https://<your-netlify-site>.netlify.app
+FRONTEND_BASE_URL=https://<your-netlify-site>.netlify.app
 DATABASE_URL=<supabase-postgres-uri-with-sslmode=require>
 DB_SSL_REQUIRE=True
 SECURE_SSL_REDIRECT=True

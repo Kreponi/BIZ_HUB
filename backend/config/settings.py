@@ -164,6 +164,7 @@ CSRF_TRUSTED_ORIGINS = env_list(
     ",".join(CORS_ALLOWED_ORIGINS),
 )
 CORS_ALLOW_CREDENTIALS = False
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

@@ -92,17 +92,20 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     if (!product) return;
 
     trackEvent("whatsapp_contact", { product_id: String(product.id) });
-    const currentUrl = window.location.href;
+    const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api").replace(/\/+$/, "");
+    const backendBaseUrl = apiBaseUrl.replace(/\/api$/, "");
+    const shareUrl = `${backendBaseUrl}/share/product/${product.id}/`;
     const rawImageUrl = product.images[0] || "";
     const imageUrl = /^https?:\/\//i.test(rawImageUrl) ? rawImageUrl : "";
     const message = encodeURIComponent(
       [
+        shareUrl,
+        "",
         `Hello BizHub! I'm interested in this product.`,
         `Name: ${product.name}`,
         `Price: ${formatGhs(product.price)}`,
         `Description: ${product.description}`,
         imageUrl ? `Image: ${imageUrl}` : "",
-        `Product link: ${currentUrl}`,
       ]
         .filter(Boolean)
         .join("\n"),

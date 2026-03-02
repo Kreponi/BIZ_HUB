@@ -5,7 +5,8 @@ services:
     rootDir: backend
     plan: free
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate && python manage.py ensure_admin_user && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    preDeployCommand: python manage.py migrate && python manage.py ensure_admin_user
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     healthCheckPath: /healthz/
     envVars:
       - key: DJANGO_SECRET_KEY
@@ -22,6 +23,10 @@ services:
         sync: false
       - key: DB_SSL_REQUIRE
         value: "True"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: GUNICORN_CMD_ARGS
+        value: "--workers 1 --threads 2 --timeout 60 --max-requests 500 --max-requests-jitter 50"
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SESSION_COOKIE_SECURE
